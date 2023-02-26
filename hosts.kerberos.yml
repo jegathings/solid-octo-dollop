@@ -1,0 +1,289 @@
+# Automatically created from terraform data on 
+
+all:
+  vars:
+    confluent_package_version: 7.3.1
+    ansible_connection: ssh
+    ansible_user: ubuntu
+    ansible_become: true
+    ansible_ssh_private_key_file: ~/.ssh/svalluri-bootcamp.pem
+    confluent_license: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJDb25mbHVlbnRQcm9mZXNzaW9uYWxTZXJ2aWNlcyIsImV4cCI6MTcwNDQ5OTIwMCwiaWF0IjoxNjA5ODkxMjAwLCJpc3MiOiJDb25mbHVlbnQiLCJtb25pdG9yaW5nIjp0cnVlLCJuYjQiOjE2MDk5NDQ1MjYsInN1YiI6ImNvbnRyb2wtY2VudGVyIn0.JGa0Thb5zHXfMtZliIo6kCDFrNSCoVygUsYnPZ0Sg9q2nLb-Mo6G14Jd1oX57AYdQIV4V0RnXvKUxfVmNyfXLtTFnIk3rCaQlo_jPg7Hsg9ifOgtIPR4y1yIJs2DQtult_w4xoopAl4PhtoO13CAB9uVfTzcpOto2m4G4DVRMNFKobofVp3iJaDD1cuYeYOSf94chILCGEQ98wEJ-ktBgKtpuIwAisIjBW4F6oVm7chKhILpQ478zz4fkWaU-8xz4jnjVaGqLNmVEqJ5jf7ApMsNxCv5hWbo8_gkCucMg1fcUSzR5FkhkhFfh0o7DZweJJAiZ2Snr2cKNddCVRnLbQ"
+
+    #### Deployment Strategy
+    deployment_strategy: parallel
+
+    #### TIAA Custom Paths
+    #TIAA base directory to hold all Confluent related files
+    tiaa_destination_path: /confluent
+    tiaa_dist_path: "{{tiaa_destination_path}}/confluent-{{confluent_package_version}}"
+    tiaa_staging_path: "{{tiaa_destination_path}}/staging"          # TIAA Staging directory holds staged files
+    tiaa_security_path: "{{tiaa_destination_path}}/security"        # keytabs, jks, jaas,.config, krb5.config
+    tiaa_log_path: "{{tiaa_destination_path}}/logs"                 # log files
+    tiaa_data_path: "{{tiaa_destination_path}}/data"                # Data path
+    tiaa_config_path: "{{tiaa_destination_path}}/tiaa/config"       # property files, log4j
+
+    #### Installation method & custom paths
+    # If "archive" is selected then services will not be installed via the use of yum or apt,
+    # but will instead be installed via expanding the target .tar.gz file from the Confluent archive
+    # into the path defined by archive_destination_path
+    installation_method: archive
+    archive_destination_path: "{{tiaa_destination_path}}"           # The path the downloaded archive is expanded into
+    #archive_config_base_path: "{{tiaa_config_path}}"                # Property base path
+    config_base_path: "{{tiaa_config_path}}"
+    config_prefix: ""
+
+    #### Staging files on Ansible control node: keytab
+    zookeeper_kerberos_keytab_path: "{{tiaa_staging_path}}/zookeeper-{{inventory_hostname_short}}.keytab"
+    zookeeper_kerberos_principal: "zookeeper/{{inventory_hostname}}@{{kerberos.realm | upper}}"
+    kafka_broker_kerberos_keytab_path: "{{tiaa_staging_path}}/kafka-{{inventory_hostname_short}}.keytab"
+    kafka_broker_kerberos_principal: "kafka/{{inventory_hostname}}@{{kerberos.realm | upper}}"
+    schema_registry_kerberos_keytab_path: "{{tiaa_staging_path}}/schema-registry-{{inventory_hostname_short}}.keytab"
+    schema_registry_kerberos_principal: "schema-registry/{{inventory_hostname}}@{{kerberos.realm | upper}}"
+    kafka_rest_kerberos_keytab_path: "{{tiaa_staging_path}}/kafka_rest-{{inventory_hostname_short}}.keytab"
+    kafka_rest_kerberos_principal: "kafka_rest/{{inventory_hostname}}@{{kerberos.realm | upper}}"
+    kafka_connect_kerberos_keytab_path: "{{tiaa_staging_path}}/kafka-connect-{{inventory_hostname_short}}.keytab"
+    kafka_connect_kerberos_principal: "kafka-connect/{{inventory_hostname}}@{{kerberos.realm | upper}}"
+    ksql_kerberos_keytab_path: "{{tiaa_staging_path}}/ksql-{{inventory_hostname_short}}.keytab"
+    ksql_kerberos_principal: "ksql/{{inventory_hostname}}@{{kerberos.realm | upper}}"
+    control_center_kerberos_keytab_path: "{{tiaa_staging_path}}/control-center-{{inventory_hostname_short}}.keytab"
+    control_center_kerberos_principal: "control-center/{{inventory_hostname}}@{{kerberos.realm | upper}}"
+
+    #### SSL
+    ssl_enabled: true
+    zookeeper_ssl_enabled: false
+    ssl_provided_keystore_and_truststore: true
+    ssl_file_dir: "{{tiaa_security_path}}"
+    # SSL Keystore
+    ssl_keystore_filepath: "{{tiaa_security_path}}/{{inventory_hostname}}-keystore.jks"
+    ssl_keystore_key_password: changeme
+    ssl_keystore_store_password: changeme
+    # SSL truststore
+    ssl_truststore_filepath: "{{tiaa_security_path}}/kafka-truststore.jks"
+    ssl_truststore_password: changeme
+    ssl_truststore_ca_cert_alias: root-ca
+
+    #### Destination Keytab location on each host (zk, broker etc.)
+    zookeeper_keytab_path: "{{tiaa_security_path}}/zookeeper.keytab"
+    kafka_broker_keytab_path: "{{tiaa_security_path}}/kafka_broker.keytab"
+    schema_registry_keytab_path: "{{tiaa_security_path}}/schema_registry.keytab"
+    kafka_rest_keytab_path: "{{tiaa_security_path}}/kafka_rest.keytab"
+    kafka_connect_keytab_path: "{{tiaa_security_path}}/kafka_connect.keytab"
+    ksql_keytab_path: "{{tiaa_security_path}}/ksql.keytab"
+    control_center_keytab_path: "{{tiaa_security_path}}/control_center.keytab"
+
+#    #### Destination keystore location on each host (zk, broker etc.)
+#    zookeeper_keystore_path: "{{tiaa_security_path}}/zookeeper.keystore.jks"
+#    kafka_broker_keystore_path: "{{tiaa_security_path}}/kafka_broker.keystore.jks"
+#    schema_registry_keystore_path: "{{tiaa_security_path}}/schema_registry.keystore.jks"
+#    kafka_rest_keystore_path: "{{tiaa_security_path}}/kafka_rest.keystore.jks"
+#    kafka_connect_keystore_path: "{{tiaa_security_path}}/kafka_connect.keystore.jks"
+#    ksql_keystore_path: "{{tiaa_security_path}}/ksql.keystore.jks"
+#    control_center_keystore_path: "{{tiaa_security_path}}/control_center.truststore.jks"
+#
+#    #### Destination truststore location on each host (zk, broker etc.)
+#    zookeeper_truststore_path: "{{tiaa_security_path}}/zookeeper.truststore.jks"
+#    kafka_broker_truststore_path: "{{tiaa_security_path}}/kafka_broker.truststore.jks"
+#    schema_registry_truststore_path: "{{tiaa_security_path}}/schema_registry.truststore.jks"
+#    kafka_rest_truststore_path: "{{tiaa_security_path}}/kafka_rest.truststore.jks"
+#    kafka_connect_truststore_path: "{{tiaa_security_path}}/kafka_connect.truststore.jks"
+#    ksql_truststore_path: "{{tiaa_security_path}}/ksql.truststore.jks"
+#    control_center_truststore_path: "{{tiaa_security_path}}/control_center.truststore.jks"
+
+    #### Linux User that each Service runs with. Linux Group that each Service user belongs to
+    zookeeper_user: xecubedv
+    zookeeper_group: ap_t_ecube
+    kafka_broker_user: xecubedv
+    kafka_broker_group: ap_t_ecube
+    schema_registry_user: xecubedv
+    schema_registry_group: ap_t_ecube
+    kafka_connect_user: xecubedv
+    kafka_connect_group: ap_t_ecube
+    ksql_user: xecubedv
+    ksql_group: ap_t_ecube
+    kafka_rest_user: xecubedv
+    kafka_rest_group: ap_t_ecube
+    control_center_user: xecubedv
+    control_center_group: ap_t_ecube
+
+    #### Kerberos settings
+    kerberos_kafka_broker_primary: kafka
+    kerberos_configure: true
+    kerberos:
+      realm: BOOTCAMP-AMERICAS.CONFLUENT.IO
+      kdc_hostname: samba.bootcamp-americas.confluent.io
+      admin_hostname: samba.bootcamp-americs.confluent.io
+      canonicalize: false 
+      allow_weak_crypto: true
+
+    #SASL    
+    sasl_protocol: kerberos
+
+    ## KSQL
+    ksql_service_id: ksql_dev
+
+    ## Connect
+    kafka_connect_group_id: connect-cluster
+
+    #### Configuring Multiple Listeners ####
+    kafka_broker_custom_listeners:
+      plaintext_listener:
+        name: PLAINTEXT
+        port: 9092
+        ssl_enabled: false
+        ssl_mutual_auth_enabled: false
+        sasl_protocol: none
+      ssl_listener:
+        name: SSL
+        port: 9093
+        ssl_enabled: true
+        ssl_mutual_auth_enabled: false
+        sasl_protocol: none
+      internal:
+        name: SASL_PLAINTEXT
+        port: 9192
+        ssl_enabled: false
+        ssl_mutual_auth_enabled: false
+        sasl_protocol: kerberos
+      kerberos_listener:
+        name: SASL_SSL
+        port: 9292
+        ssl_enabled: true
+        ssl_mutual_auth_enabled: false
+        sasl_protocol: kerberos
+
+zookeeper:
+  vars:
+    zookeeper_log_dir: "{{tiaa_log_path}}"
+    zookeeper_copy_files:
+      - source_path: "{{tiaa_staging_path}}/krb5.conf"
+        destination_path: "{{tiaa_security_path}}/krb5.conf"
+
+    zookeeper_custom_properties:
+      dataDir: "{{tiaa_data_path}}/zookeeper"
+      requireClientAuthScheme: sasl
+      jaasLoginRenew: 3600000
+      tickTime: 2000
+      confluent.license: "{{ confluent_license }}"
+    zookeeper_service_environment_overrides:
+      JMX_PORT: "9010"
+      KAFKA_OPTS: "-Djdk.tls.ephemeralDHKeySize=2048 -Djava.security.krb5.conf={{tiaa_security_path}}/krb5.conf -Djava.security.auth.login.config={{tiaa_security_path}}/zookeeper_jaas.conf"
+  hosts:
+    ip-172-32-53-48.us-west-2.compute.internal:
+      zookeeper_id: 1
+#    ip-172-32-73-192.us-west-2.compute.internal:
+#      zookeeper_id: 2
+#    ip-172-32-84-166.us-west-2.compute.internal:
+#      zookeeper_id: 3
+
+kafka_broker:
+  vars:
+    kafka_broker_log_dir: "{{tiaa_log_path}}"
+    kafka_broker_copy_files:
+      - source_path: "{{tiaa_staging_path}}/krb5.conf"
+        destination_path: "{{tiaa_security_path}}/krb5.conf"
+    kafka_broker_custom_properties:
+      log.dirs: "{{tiaa_data_path}}/kafka"
+      auto.create.topics.enable: true
+      authorizer.class.name: "kafka.security.authorizer.AclAuthorizer"
+      allow.everyone.if.no.acl.found: true
+      super.users: "User:kafka;User:schema-registry;User:rest;User:ksql;User:control-center;User:kafka-connect;"
+      sasl.kerberos.principal.to.local.rules: RULE:[1:$1@$0](.*@TAD.TIAA-CREF.ORG)s/@.*//,DEFAULT
+      ssl.principal.mapping.rules: RULE:^CN=(.*?),OU=ServiceUsers.*$/$1/,RULE:^CN=(.*?),OU=(.*?),O=(.*?),L=(.*?),ST=(.*?),C=(.*?)$/$1@$2/L,RULE:^.*[Cc][Nn]=([a-zA-Z0-9.]*).*$/$1/L,DEFAULT
+      sasl.enabled.mechanisms: GSSAPI,SCRAM-SHA-256
+      ssl.client.auth: required
+      confluent.balancer.enable: true
+      confluent.balancer.heal.uneven.load.trigger: ANY_UNEVEN_LOAD
+      confluent.balancer.heal.broker.failure.threshold.ms: 21600000
+      default.replication.factor: 3
+      log.retention.hours: 24
+      confluent.license: "{{ confluent_license }}"
+      inter.broker.protocol.version: 3.3
+      log.message.format.version: 2.2
+    kafka_broker_service_environment_overrides:
+      JMX_PORT: "9010"
+      KRB5_CONFIG: "{{tiaa_staging_path}}/krb5.conf"
+      KAFKA_HEAP_OPTS: "-Xms4g -Xmx4g -XX:MetaspaceSize=96m -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:G1HeapRegionSize=16M -XX:MinMetaspaceFreeRatio=50 -XX:MaxMetaspaceFreeRatio=80"
+      KAFKA_OPTS: "-Djdk.tls.ephemeralDHKeySize=2048 -Djava.security.krb5.conf={{tiaa_security_path}}/krb5.conf -Djava.security.auth.login.config={{tiaa_security_path}}/kafka_server_jaas.conf -Dsun.security.krb5.debug=true -Dsun.security.jgss.debug=true"
+  hosts:
+    ip-172-32-53-48.us-west-2.compute.internal:
+      broker_id: 101
+#    ip-172-32-77-104.us-west-2.compute.internal:
+#      broker_id: 102
+#    ip-172-32-83-126.us-west-2.compute.internal:
+#      broker_id: 103
+
+schema_registry:
+  vars:
+    schema_registry_log_dir: "{{tiaa_log_path}}"
+    kafka_schema_registry_custom_properties:
+      kafka.store.topic: _schemas
+      avro.compatibility.level: backward
+      confluent.license: "{{ confluent_license }}"
+  hosts:
+    ip-172-32-53-48.us-west-2.compute.internal:
+
+kafka_rest:
+  vars:
+    kafka_rest_log_dir: "{{tiaa_log_path}}"
+    kafka_rest_custom_properties:
+      confluent.license: "{{ confluent_license }}"
+  hosts:
+    ip-172-32-53-48.us-west-2.compute.internal:
+
+kafka_connect:
+  vars:
+    kafka_connect_log_dir: "{{tiaa_log_path}}"
+    kafka_connect_plugins_path:
+      - /confluent/share/java
+      - /confluent/extra-connect-plugins
+    kafka_connect_custom_properties:
+      offset.storage.topic: _connect-offsets
+      config.storage.topic: _connect-configs
+      status.storage.topic: _connect-status
+      connector.client.config.override.policy: Principal
+      confluent.license: "{{ confluent_license }}"
+  hosts:
+    ip-172-32-53-48.us-west-2.compute.internal:
+
+ksql:
+  vars:
+    ksql_log_dir: "{{tiaa_log_path}}"
+    ksql_service_environment_overrides:
+      JAVA_HOME: "{{java_home_path}}"
+  hosts:
+    ip-172-32-53-48.us-west-2.compute.internal:
+
+control_center:
+  vars:
+    control_center_log_dir: "{{tiaa_log_path}}"
+    control_center_authentication_type: none
+    control_center_custom_properties:
+      confluent.controlcenter.data.dir: "{{tiaa_data_path}}control-center"
+      confluent.controlcenter.mail.enabled: true
+      confluent.controlcenter.mail.host.name: "smtp.glb.tiaa-cref.org"
+      confluent.controlcenter.mail.port: 587
+      confluent.controlcenter.mail.from: "xecubedv@dendvb3e3ccc01.cloud.tiaa-cref.org"
+      confluent.license: "{{ confluent_license }}"
+    control_center_service_environment_overrides:
+      #JMX_PORT: "9010"
+      CONTROL_CENTER_HEAP_OPTS: "-Xmx2g"
+      KAFKA_OPTS: "-Djdk.tls.ephemeralDHKeySize=2048 -Djava.security.krb5.conf={{tiaa_security_path}}/krb5.conf -Djava.security.auth.login.config={{tiaa_security_path}}/control_center_jaas.conf -Dsun.security.krb5.debug=true -Dsun.security.jgss.debug=true"
+  hosts:
+    ip-172-32-53-48.us-west-2.compute.internal:
+
+
+
+#  zookeeper_keytab_path
+#  kafka_broker_keytab_path
+#  schema_registry_keytab_path
+#  kafka_rest_keytab_path
+#  kafka_connect_keytab_path
+#  ksql_keytab_path
+#  control_center_keytab_path
+#  zookeeper_truststore_path
+#  kafka_broker_truststore_path
+#  schema_registry_truststore_path
+#  kafka_rest_truststore_path
+#  kafka_connect_truststore_path
+#  ksql_truststore_path
+#  control_center_truststore_path
